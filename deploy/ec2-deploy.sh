@@ -28,11 +28,19 @@ install_base_packages() {
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
       ca-certificates curl dnsutils git gnupg nginx certbot python3-certbot-nginx
   elif command -v dnf >/dev/null 2>&1; then
+    # Amazon Linux 2023 ships curl-minimal, which provides the curl command and
+    # conflicts with the full curl RPM. Do not request the full package here.
     dnf install -y \
-      ca-certificates curl bind-utils git nginx certbot python3-certbot-nginx
+      ca-certificates bind-utils git nginx certbot python3-certbot-nginx
+    if ! command -v curl >/dev/null 2>&1; then
+      dnf install -y curl-minimal
+    fi
   elif command -v yum >/dev/null 2>&1; then
     yum install -y \
-      ca-certificates curl bind-utils git nginx certbot python3-certbot-nginx
+      ca-certificates bind-utils git nginx certbot python3-certbot-nginx
+    if ! command -v curl >/dev/null 2>&1; then
+      yum install -y curl
+    fi
   else
     echo "Unsupported Linux distribution."
     echo "Use Ubuntu, Debian, Amazon Linux 2023, or RHEL-compatible Linux."
