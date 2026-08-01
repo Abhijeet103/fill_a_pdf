@@ -100,6 +100,7 @@ export default function Home() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
+          <Link href="/protect-pdf">Protect PDF</Link>
           <a href="#privacy">Privacy</a>
           <a href="#faq">FAQ</a>
         </nav>
@@ -205,7 +206,7 @@ export default function Home() {
       <footer>
         <a className="brand footer-brand" href="#top"><span className="brand-mark" aria-hidden="true">F</span><span>Fill a PDF</span></a>
         <p>Private PDF form filling, right in your browser.</p>
-        <nav aria-label="Footer navigation"><Link href="/privacy">Privacy</Link><a href="#faq">FAQ</a><a href="#tool">Use the tool</a></nav>
+        <nav aria-label="Footer navigation"><Link href="/protect-pdf">Protect PDF</Link><Link href="/privacy">Privacy</Link><a href="#faq">FAQ</a><a href="#tool">Use the tool</a></nav>
         <small>© {new Date().getFullYear()} Fill a PDF. Your files stay yours.</small>
       </footer>
     </>

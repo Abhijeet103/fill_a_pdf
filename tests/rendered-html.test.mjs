@@ -34,3 +34,15 @@ test("server-renders a plain-language privacy page", async () => {
   assert.match(html, /your PDF stays on your device/i);
   assert.match(html, /does not upload, store, inspect, or share/i);
 });
+
+test("server-renders the password protection tool with SEO content", async () => {
+  const response = await render("/protect-pdf");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /<title>Password Protect a PDF Online Free &amp; Privately \| Fill a PDF<\/title>/i);
+  assert.match(html, /<h1[^>]*>Password protect a PDF\./i);
+  assert.match(html, /Choose a PDF to protect/i);
+  assert.match(html, /AES-256/i);
+  assert.match(html, /FAQPage/i);
+  assert.match(html, /canonical/i);
+});

@@ -1,18 +1,22 @@
 "use client";
 
 import { ChangeEvent, DragEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
-import { applyFieldValues, canvasPointToPdf, fieldKindFromConstructor, type PdfFieldState, type TextOverlay } from "../lib/pdf-utils";
+import { applyFieldValues, canvasPointToPdf, fieldKindFromConstructor, friendlyFieldName, inferFieldLabel, type PdfFieldState, type PdfTextLabelItem, type TextOverlay } from "../lib/pdf-utils";
 import type { PDFDocument as PdfLibDocument, PDFField } from "pdf-lib";
 
 const MAX_BYTES = 25 * 1024 * 1024;
 const RENDER_SCALE = 1.35;
 
+type PdfJsPage = {
+  getViewport(options: { scale: number }): { width: number; height: number };
+  getAnnotations(): Promise<Array<{ fieldName?: string; rect?: number[]; alternativeText?: string }>>;
+  getTextContent(): Promise<{ items: Array<{ str?: string; transform?: number[]; width?: number }> }>;
+  render(options: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }): { promise: Promise<void> };
+};
+
 type PdfJsDocument = {
   numPages: number;
-  getPage(pageNumber: number): Promise<{
-    getViewport(options: { scale: number }): { width: number; height: number };
-    render(options: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }): { promise: Promise<void> };
-  }>;
+  getPage(pageNumber: number): Promise<PdfJsPage>;
   destroy(): Promise<void>;
 };
 
@@ -44,6 +48,28 @@ function readFieldState(field: PDFField, pdfLib: typeof import("pdf-lib")): PdfF
     options = field.getOptions();
   }
   return { name: field.getName(), kind, value, options };
+}
+
+async function inferVisibleFieldLabels(document: PdfJsDocument) {
+  const labels = new Map<string, string>();
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+    const page = await document.getPage(pageNumber);
+    const [annotations, textContent] = await Promise.all([page.getAnnotations(), page.getTextContent()]);
+    const textItems: PdfTextLabelItem[] = textContent.items.flatMap((item) => {
+      if (!item.str || !item.transform || typeof item.width !== "number") return [];
+      return [{ text: item.str, x: item.transform[4], y: item.transform[5], width: item.width }];
+    });
+    for (const annotation of annotations) {
+      if (!annotation.fieldName || !annotation.rect || annotation.rect.length !== 4) continue;
+      const label = inferFieldLabel({
+        name: annotation.fieldName,
+        rect: annotation.rect as [number, number, number, number],
+        alternativeText: annotation.alternativeText,
+      }, textItems);
+      if (label) labels.set(annotation.fieldName, label);
+    }
+  }
+  return labels;
 }
 
 export function PdfFiller() {
@@ -123,9 +149,10 @@ export function PdfFiller() {
 
       await pdfJsDocument.current?.destroy();
       const displayDocument = await pdfJs.getDocument({ data: bytes.slice() }).promise as unknown as PdfJsDocument;
+      const inferredLabels = await inferVisibleFieldLabels(displayDocument);
       pdfJsDocument.current = displayDocument;
       setFileName(file.name);
-      setFields(detected);
+      setFields(detected.map((field) => ({ ...field, label: inferredLabels.get(field.name) || friendlyFieldName(field.name) })));
       setOverlays([]);
       setPageIndex(0);
       setPageCount(displayDocument.numPages);
@@ -287,7 +314,7 @@ export function PdfFiller() {
             <div className="field-list">
               {fields.map((field, index) => (
                 <div className="field-control" key={field.name}>
-                  <label htmlFor={`pdf-field-${index}`}>{field.name}<small>{field.kind.replace("-", " ")}</small></label>
+                  <label htmlFor={`pdf-field-${index}`}><span>{field.label || friendlyFieldName(field.name)}</span><small title={field.name}>{field.kind.replace("-", " ")} · {field.name}</small></label>
                   {field.kind === "text" && <input id={`pdf-field-${index}`} type="text" value={String(field.value)} onChange={(event) => updateField(field.name, event.target.value)} />}
                   {field.kind === "checkbox" && <label className="toggle"><input id={`pdf-field-${index}`} type="checkbox" checked={Boolean(field.value)} onChange={(event) => updateField(field.name, event.target.checked)} /><span aria-hidden="true" /> <b>{field.value ? "Checked" : "Not checked"}</b></label>}
                   {(field.kind === "dropdown" || field.kind === "radio") && <select id={`pdf-field-${index}`} value={String(field.value)} onChange={(event) => updateField(field.name, event.target.value)}><option value="">Choose an option</option>{field.options?.map((option) => <option key={option} value={option}>{option}</option>)}</select>}
