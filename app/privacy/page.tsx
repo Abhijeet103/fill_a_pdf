@@ -5,7 +5,7 @@ import { SITE_URL } from "../lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How PDF Slate keeps your documents private by processing them entirely in your browser.",
+  description: "How localpdf.store keeps your documents private by processing them entirely in your browser.",
   alternates: { canonical: `${SITE_URL}/privacy` },
 };
 
@@ -17,20 +17,20 @@ export default function PrivacyPage() {
         <article className="policy-card">
           <p className="eyebrow">Plain-language policy</p>
           <h1>Privacy built into the product</h1>
-          <p><strong>Short version:</strong> your PDF stays on your device. PDF Slate does not upload, store, inspect, or share your document, its filename, or the values you enter.</p>
+          <p><strong>Short version:</strong> your PDF stays on your device. localpdf.store does not upload, store, inspect, or share your document, its filename, or the values you enter.</p>
           <h2>How document processing works</h2>
           <p>When you choose a PDF, browser-based code reads and renders a working copy in the current tab. When you download, a fresh copy of the original document is updated locally. No upload endpoint or remote file-processing service is involved.</p>
           <h2>Information we do not collect</h2>
           <ul><li>PDF file contents or file bytes</li><li>PDF filenames</li><li>Form field names or values</li><li>PDF protection passwords</li><li>Placed text</li><li>Copies of completed documents</li></ul>
           <h2>Cookies and accounts</h2>
-          <p>PDF Slate has no login, payment flow, advertising cookies, or document analytics. The current version does not use cookies.</p>
+          <p>localpdf.store has no login, payment flow, advertising cookies, or document analytics. The current version does not use cookies.</p>
           <h2>Network access</h2>
           <p>The PDF libraries and worker are bundled with the site rather than loaded from a third-party content network. The site security policy prevents the editor from connecting to external services.</p>
           <h2>Keeping control of your file</h2>
           <p>Closing or refreshing the tab clears the active editing, compression, merging, splitting, or protection session. Your original PDF is not changed; a new output file is created only when you choose Download.</p>
           <h2>Questions</h2>
           <p>This policy will be updated with a contact address when the final domain is selected. Until then, no personal information or document data is requested by the service.</p>
-          <p><Link href="/">← Return to PDF Slate</Link></p>
+          <p><Link href="/">← Return to localpdf.store</Link></p>
         </article>
       </main>
       <SiteFooter />

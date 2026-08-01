@@ -1,5 +1,5 @@
 {
-  "name": "pdf-slate",
+  "name": "localpdf-store",
   "version": "0.1.0",
   "private": true,
   "engines": {

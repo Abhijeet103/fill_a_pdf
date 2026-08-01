@@ -4,14 +4,14 @@ import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { SITE_URL } from "../lib/site";
 
 export const metadata: Metadata = {
-  title: { absolute: "Password Protect a PDF Online Free & Privately | PDF Slate" },
+  title: { absolute: "Password Protect a PDF Online Free & Privately | localpdf.store" },
   description: "Add AES-256 password protection to a PDF in your browser. Free, private, and no upload, login, or payment required.",
   alternates: { canonical: `${SITE_URL}/protect-pdf` },
   openGraph: {
     title: "Password protect a PDF privately",
     description: "Add a password and download an encrypted PDF without uploading your document.",
     url: `${SITE_URL}/protect-pdf`,
-    siteName: "PDF Slate",
+    siteName: "localpdf.store",
     type: "website",
   },
 };

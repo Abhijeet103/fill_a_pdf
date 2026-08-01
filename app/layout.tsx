@@ -4,12 +4,12 @@ import { SITE_URL } from "./lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "PDF Slate", template: "%s | PDF Slate" },
+  title: { default: "localpdf.store", template: "%s | localpdf.store" },
   description: "Fill, compress, merge, split, and protect PDFs privately in your browser. Free, with no uploads, accounts, or payment.",
-  applicationName: "PDF Slate",
+  applicationName: "localpdf.store",
   category: "utilities",
-  openGraph: { siteName: "PDF Slate", type: "website", images: [{ url: `${SITE_URL}/og-pdf-slate.png`, width: 1729, height: 910, alt: "PDF Slate private PDF tools" }] },
-  twitter: { card: "summary_large_image", images: [`${SITE_URL}/og-pdf-slate.png`] },
+  openGraph: { siteName: "localpdf.store", type: "website", images: [{ url: `${SITE_URL}/og-localpdf-store.png`, width: 1729, height: 910, alt: "localpdf.store private PDF tools" }] },
+  twitter: { card: "summary_large_image", images: [`${SITE_URL}/og-localpdf-store.png`] },
 };
 
 export const viewport: Viewport = {

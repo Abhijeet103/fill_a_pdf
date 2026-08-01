@@ -4,11 +4,11 @@ import { SiteFooter, SiteHeader } from "./components/SiteChrome";
 import { SITE_URL } from "./lib/site";
 
 export const metadata: Metadata = {
-  title: { absolute: "Free Private PDF Tools Online — Fill, Compress, Merge, Split & Protect | PDF Slate" },
+  title: { absolute: "Free Private PDF Tools Online — Fill, Compress, Merge, Split & Protect | localpdf.store" },
   description: "Free PDF tools that run privately in your browser. Fill forms, compress to a target size, merge, split, and password-protect PDFs with no uploads or account.",
   alternates: { canonical: SITE_URL },
-  openGraph: { title: "PDF Slate — Private PDF tools in your browser", description: "Fill, compress, merge, split, and protect PDFs without uploading your files.", url: SITE_URL, siteName: "PDF Slate", type: "website", images: [{ url: `${SITE_URL}/og-pdf-slate.png`, width: 1729, height: 910, alt: "PDF Slate private browser-based PDF tools" }] },
-  twitter: { card: "summary_large_image", title: "PDF Slate — Private PDF tools", description: "Free PDF tools with no uploads, login, or payment.", images: [`${SITE_URL}/og-pdf-slate.png`] },
+  openGraph: { title: "localpdf.store — Private PDF tools in your browser", description: "Fill, compress, merge, split, and protect PDFs without uploading your files.", url: SITE_URL, siteName: "localpdf.store", type: "website", images: [{ url: `${SITE_URL}/og-localpdf-store.png`, width: 1729, height: 910, alt: "localpdf.store private browser-based PDF tools" }] },
+  twitter: { card: "summary_large_image", title: "localpdf.store — Private PDF tools", description: "Free PDF tools with no uploads, login, or payment.", images: [`${SITE_URL}/og-localpdf-store.png`] },
 };
 
 const tools = [
@@ -20,13 +20,13 @@ const tools = [
 ];
 
 const faqs = [
-  { question: "Are PDF Slate tools free?", answer: "Yes. Every current tool is free with no account, trial, payment, watermark, or usage paywall." },
-  { question: "Do my PDF files get uploaded?", answer: "No. PDF Slate processes your documents with code running in your browser. File contents, filenames, form values, and passwords are not sent to our server." },
+  { question: "Are localpdf.store tools free?", answer: "Yes. Every current tool is free with no account, trial, payment, watermark, or usage paywall." },
+  { question: "Do my PDF files get uploaded?", answer: "No. localpdf.store processes your documents with code running in your browser. File contents, filenames, form values, and passwords are not sent to our server." },
   { question: "Which PDF tools are available?", answer: "You can fill PDF forms, compress PDFs toward a chosen size, merge multiple PDFs, split or extract pages, and add AES-256 password protection." },
-  { question: "Can I use PDF Slate on mobile?", answer: "Yes. Every tool adapts to phones and tablets, though large documents may process faster on a desktop computer with more memory." },
+  { question: "Can I use localpdf.store on mobile?", answer: "Yes. Every tool adapts to phones and tablets, though large documents may process faster on a desktop computer with more memory." },
 ];
 
-const softwareJsonLd = { "@context": "https://schema.org", "@type": "WebApplication", name: "PDF Slate", url: SITE_URL, applicationCategory: "UtilitiesApplication", operatingSystem: "Any modern browser", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" }, featureList: tools.map((tool) => tool.search) };
+const softwareJsonLd = { "@context": "https://schema.org", "@type": "WebApplication", name: "localpdf.store", url: SITE_URL, applicationCategory: "UtilitiesApplication", operatingSystem: "Any modern browser", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" }, featureList: tools.map((tool) => tool.search) };
 const itemListJsonLd = { "@context": "https://schema.org", "@type": "ItemList", name: "Free online PDF tools", itemListElement: tools.map((tool, index) => ({ "@type": "ListItem", position: index + 1, name: tool.search, url: `${SITE_URL}${tool.href}` })) };
 const faqJsonLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map(({ question, answer }) => ({ "@type": "Question", name: question, acceptedAnswer: { "@type": "Answer", text: answer } })) };
 
@@ -46,9 +46,9 @@ export default function Home() {
 
       <section className="trust-strip" aria-label="Product promises"><div><span aria-hidden="true">◎</span><strong>100% browser-based</strong><small>No file uploads</small></div><div><span aria-hidden="true">$0</span><strong>Actually free</strong><small>No login or payment</small></div><div><span aria-hidden="true">◇</span><strong>Purpose-built pages</strong><small>Go directly to your tool</small></div><div><span aria-hidden="true">↯</span><strong>Works on any device</strong><small>Responsive and touch-friendly</small></div></section>
 
-      <section className="privacy-section" aria-labelledby="privacy-title"><div className="privacy-visual" aria-hidden="true"><div className="device-ring"><div className="device-card"><span>PDF</span><i>✓</i></div></div><p>Your device</p><small>Secure browser workspace</small></div><div className="privacy-copy"><p className="eyebrow">Privacy you can verify</p><h2 id="privacy-title">Your documents stay on your device</h2><p>Traditional online PDF services upload documents for processing. PDF Slate uses browser-based libraries, so the work happens locally in the current tab.</p><ul><li><span>✓</span><div><strong>No uploads</strong><p>Document bytes are never transmitted to us or a third party.</p></div></li><li><span>✓</span><div><strong>No document storage</strong><p>Refreshing or closing the tab clears the active workspace.</p></div></li><li><span>✓</span><div><strong>No accounts or payments</strong><p>Use every current PDF tool without sharing personal details.</p></div></li></ul><Link href="/privacy">Read the plain-language privacy policy <span aria-hidden="true">→</span></Link></div></section>
+      <section className="privacy-section" aria-labelledby="privacy-title"><div className="privacy-visual" aria-hidden="true"><div className="device-ring"><div className="device-card"><span>PDF</span><i>✓</i></div></div><p>Your device</p><small>Secure browser workspace</small></div><div className="privacy-copy"><p className="eyebrow">Privacy you can verify</p><h2 id="privacy-title">Your documents stay on your device</h2><p>Traditional online PDF services upload documents for processing. localpdf.store uses browser-based libraries, so the work happens locally in the current tab.</p><ul><li><span>✓</span><div><strong>No uploads</strong><p>Document bytes are never transmitted to us or a third party.</p></div></li><li><span>✓</span><div><strong>No document storage</strong><p>Refreshing or closing the tab clears the active workspace.</p></div></li><li><span>✓</span><div><strong>No accounts or payments</strong><p>Use every current PDF tool without sharing personal details.</p></div></li></ul><Link href="/privacy">Read the plain-language privacy policy <span aria-hidden="true">→</span></Link></div></section>
 
-      <section id="faq" className="content-section faq-section" aria-labelledby="faq-title"><div className="section-intro centered"><p className="eyebrow">PDF Slate FAQ</p><h2 id="faq-title">Common questions about our PDF tools</h2></div><div className="faq-list">{faqs.map((faq, index) => <details key={faq.question} open={index === 0}><summary>{faq.question}<span aria-hidden="true">+</span></summary><p>{faq.answer}</p></details>)}</div></section>
+      <section id="faq" className="content-section faq-section" aria-labelledby="faq-title"><div className="section-intro centered"><p className="eyebrow">localpdf.store FAQ</p><h2 id="faq-title">Common questions about our PDF tools</h2></div><div className="faq-list">{faqs.map((faq, index) => <details key={faq.question} open={index === 0}><summary>{faq.question}<span aria-hidden="true">+</span></summary><p>{faq.answer}</p></details>)}</div></section>
       <section className="final-cta" aria-labelledby="cta-title"><p className="eyebrow">Pick a tool and start</p><h2 id="cta-title">Your PDF. Your browser. Your choice.</h2><p>Private document tools without the upload queue or account wall.</p><a className="button button-light" href="#tools">View all PDF tools <span aria-hidden="true">↑</span></a></section>
     </main>
     <SiteFooter />

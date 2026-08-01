@@ -4,14 +4,14 @@ import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { SITE_URL } from "../lib/site";
 
 export const metadata: Metadata = {
-  title: { absolute: "Compress PDF to 1 MB or a Custom Size Online | PDF Slate" },
+  title: { absolute: "Compress PDF to 1 MB or a Custom Size Online | localpdf.store" },
   description: "Compress a PDF toward 1 MB or your chosen file size privately in your browser. Free, with no upload, login, payment, or watermark.",
   alternates: { canonical: `${SITE_URL}/compress-pdf` },
   openGraph: {
     title: "Compress a PDF to your desired size privately",
     description: "Choose a target size and download a smaller PDF without uploading your document.",
     url: `${SITE_URL}/compress-pdf`,
-    siteName: "PDF Slate",
+    siteName: "localpdf.store",
     type: "website",
   },
 };

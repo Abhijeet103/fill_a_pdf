@@ -3,7 +3,7 @@ import { PdfFiller } from "../components/PdfFiller";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { SITE_URL } from "../lib/site";
 
-export const metadata: Metadata = { title: { absolute: "Fill PDF Forms Online Free & Privately | PDF Slate" }, description: "Fill PDF form fields or add text to a PDF privately in your browser. Free, with no upload, account, payment, or watermark.", alternates: { canonical: `${SITE_URL}/fill-pdf` }, openGraph: { title: "Fill PDF forms privately online", description: "Complete and download a PDF without uploading it.", url: `${SITE_URL}/fill-pdf`, siteName: "PDF Slate", type: "website" } };
+export const metadata: Metadata = { title: { absolute: "Fill PDF Forms Online Free & Privately | localpdf.store" }, description: "Fill PDF form fields or add text to a PDF privately in your browser. Free, with no upload, account, payment, or watermark.", alternates: { canonical: `${SITE_URL}/fill-pdf` }, openGraph: { title: "Fill PDF forms privately online", description: "Complete and download a PDF without uploading it.", url: `${SITE_URL}/fill-pdf`, siteName: "localpdf.store", type: "website" } };
 const faqs = [
   { question: "Can I fill a PDF online for free?", answer: "Yes. Complete interactive fields or place text on a flat PDF, then download it with no account, payment, or watermark." },
   { question: "Is my PDF uploaded?", answer: "No. The PDF is opened, edited, and saved by code running in your browser." },

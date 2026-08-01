@@ -35,7 +35,7 @@ test("server-renders the dedicated PDF filler page", async () => {
   const response = await render("/fill-pdf");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /<title>Fill PDF Forms Online Free &amp; Privately \| PDF Slate<\/title>/i);
+  assert.match(html, /<title>Fill PDF Forms Online Free &amp; Privately \| localpdf\.store<\/title>/i);
   assert.match(html, /<h1[^>]*>Fill a PDF online\./i);
   assert.match(html, /Choose your PDF/i);
   assert.match(html, /FAQPage/i);
@@ -54,7 +54,7 @@ test("server-renders the password protection tool with SEO content", async () =>
   const response = await render("/protect-pdf");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /<title>Password Protect a PDF Online Free &amp; Privately \| PDF Slate<\/title>/i);
+  assert.match(html, /<title>Password Protect a PDF Online Free &amp; Privately \| localpdf\.store<\/title>/i);
   assert.match(html, /<h1[^>]*>Password protect a PDF\./i);
   assert.match(html, /Choose a PDF to protect/i);
   assert.match(html, /AES-256/i);
@@ -66,7 +66,7 @@ test("server-renders the target-size PDF compressor with SEO content", async () 
   const response = await render("/compress-pdf");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /<title>Compress PDF to 1 MB or a Custom Size Online \| PDF Slate<\/title>/i);
+  assert.match(html, /<title>Compress PDF to 1 MB or a Custom Size Online \| localpdf\.store<\/title>/i);
   assert.match(html, /<h1[^>]*>Compress a PDF to 1 MB\./i);
   assert.match(html, /Choose a PDF to compress/i);
   assert.match(html, /Target size/i);
@@ -80,7 +80,7 @@ test("server-renders the merge PDF tool with direct SEO content", async () => {
   const response = await render("/merge-pdf");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /<title>Merge PDF Files Online Free &amp; Privately \| PDF Slate<\/title>/i);
+  assert.match(html, /<title>Merge PDF Files Online Free &amp; Privately \| localpdf\.store<\/title>/i);
   assert.match(html, /<h1[^>]*>Merge PDF files online\./i);
   assert.match(html, /Choose PDFs to merge/i);
   assert.match(html, /FAQPage/i);
@@ -91,7 +91,7 @@ test("server-renders the split PDF tool with direct SEO content", async () => {
   const response = await render("/split-pdf");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /<title>Split PDF &amp; Extract Pages Online Free \| PDF Slate<\/title>/i);
+  assert.match(html, /<title>Split PDF &amp; Extract Pages Online Free \| localpdf\.store<\/title>/i);
   assert.match(html, /<h1[^>]*>Split a PDF online\./i);
   assert.match(html, /Choose a PDF to split/i);
   assert.match(html, /FAQPage/i);
