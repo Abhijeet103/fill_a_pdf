@@ -70,6 +70,8 @@ test("server-renders the target-size PDF compressor with SEO content", async () 
   assert.match(html, /<h1[^>]*>Compress a PDF to 1 MB\./i);
   assert.match(html, /Choose a PDF to compress/i);
   assert.match(html, /Target size/i);
+  assert.match(html, /local-note-icon/i);
+  assert.match(html, /local-note-copy/i);
   assert.match(html, /FAQPage/i);
   assert.match(html, /canonical/i);
 });

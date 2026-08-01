@@ -126,7 +126,7 @@ export function MergePdf() {
         </div>
       </div>
       {error ? <p className="error-message" role="alert">{error}</p> : null}
-      <p className="local-note"><span aria-hidden="true">✓</span><span><strong>Every PDF stays in this browser.</strong><br />Nothing is uploaded or stored.</span></p>
+      <p className="local-note"><span className="local-note-icon" aria-hidden="true">✓</span><span className="local-note-copy"><strong>Every PDF stays in this browser.</strong><br />Nothing is uploaded or stored.</span></p>
       <p className="sr-status" role="status" aria-live="polite">{status}</p>
     </div>
   );

@@ -269,7 +269,7 @@ export function PdfFiller() {
           <button className="button button-primary" type="button" onClick={() => inputRef.current?.click()} disabled={busy}>Choose PDF</button>
           <small>PDF only · Maximum 25 MB</small>
         </div>
-        <div className="local-note"><span aria-hidden="true">✓</span><p><strong>Your file stays on this device</strong><br />Everything happens inside your browser.</p></div>
+        <div className="local-note"><span className="local-note-icon" aria-hidden="true">✓</span><p className="local-note-copy"><strong>Your file stays on this device</strong><br />Everything happens inside your browser.</p></div>
         <p className="sr-status" role="status" aria-live="polite">{status}</p>
         {error && <div className="error-message" role="alert">{error}</div>}
       </div>

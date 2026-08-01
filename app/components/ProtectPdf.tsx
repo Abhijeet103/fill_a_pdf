@@ -194,7 +194,7 @@ export function ProtectPdf() {
       )}
 
       {error ? <p className="error-message" role="alert">{error}</p> : null}
-      <p className="local-note"><span aria-hidden="true">✓</span><span><strong>Your PDF and password stay in this browser.</strong><br />Nothing is uploaded, saved, or sent to us.</span></p>
+      <p className="local-note"><span className="local-note-icon" aria-hidden="true">✓</span><span className="local-note-copy"><strong>Your PDF and password stay in this browser.</strong><br />Nothing is uploaded, saved, or sent to us.</span></p>
       <p className="sr-status" role="status" aria-live="polite">{status}</p>
     </div>
   );

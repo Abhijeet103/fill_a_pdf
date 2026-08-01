@@ -277,7 +277,7 @@ export function CompressPdf() {
       )}
 
       {error ? <p className="error-message" role="alert">{error}</p> : null}
-      <p className="local-note"><span aria-hidden="true">✓</span><span><strong>Your PDF stays in this browser.</strong><br />Nothing is uploaded, saved, or sent to us.</span></p>
+      <p className="local-note"><span className="local-note-icon" aria-hidden="true">✓</span><span className="local-note-copy"><strong>Your PDF stays in this browser.</strong><br />Nothing is uploaded, saved, or sent to us.</span></p>
       <p className="compression-progress" role="status" aria-live="polite">{progress}</p>
     </div>
   );
