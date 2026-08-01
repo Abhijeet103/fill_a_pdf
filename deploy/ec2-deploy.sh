@@ -98,8 +98,9 @@ ensure_build_swap() {
 }
 
 verify_dns() {
-  local resolved_addresses
-  resolved_addresses="$(getent ahostsv4 "${DOMAIN}" | awk '{ print $1 }' | sort -u | paste -sd ', ' -)"
+  local imds_token instance_public_ip resolved_address_lines resolved_addresses
+  resolved_address_lines="$(getent ahostsv4 "${DOMAIN}" | awk '{ print $1 }' | sort -u)"
+  resolved_addresses="$(printf '%s\n' "${resolved_address_lines}" | paste -sd ',' -)"
 
   if [[ -z "${resolved_addresses}" ]]; then
     echo "DNS is not ready for ${DOMAIN}."
@@ -107,11 +108,33 @@ verify_dns() {
     exit 1
   fi
 
-  echo "${DOMAIN} currently resolves to: ${resolved_addresses}"
-  echo "Certificate validation will confirm that it reaches this EC2 instance."
+  imds_token="$(curl --fail --silent --show-error --max-time 3 \
+    --request PUT \
+    --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \
+    http://169.254.169.254/latest/api/token 2>/dev/null || true)"
+  instance_public_ip="$(curl --fail --silent --show-error --max-time 3 \
+    --header "X-aws-ec2-metadata-token: ${imds_token}" \
+    http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || true)"
+
+  if [[ -z "${instance_public_ip}" ]]; then
+    echo "The EC2 public IPv4 address could not be read from instance metadata."
+    echo "Confirm that this instance has a public or Elastic IP and that IMDS is enabled."
+    exit 1
+  fi
+
+  if ! grep -Fxq "${instance_public_ip}" <<< "${resolved_address_lines}"; then
+    echo "DNS does not point to this EC2 instance, so Let's Encrypt cannot validate the domain."
+    echo "Current ${DOMAIN} A record(s): ${resolved_addresses}"
+    echo "Required ${DOMAIN} A record: ${instance_public_ip}"
+    echo "Replace the existing A records, wait for DNS propagation, then run this script again."
+    exit 1
+  fi
+
+  echo "DNS verified: ${DOMAIN} points to this EC2 instance (${instance_public_ip})."
 }
 
 install_base_packages
+verify_dns
 install_node
 ensure_build_swap
 
@@ -228,8 +251,6 @@ for attempt in {1..20}; do
   fi
   sleep 1
 done
-
-verify_dns
 
 certbot --nginx \
   --non-interactive \
