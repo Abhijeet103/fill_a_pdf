@@ -46,3 +46,15 @@ test("server-renders the password protection tool with SEO content", async () =>
   assert.match(html, /FAQPage/i);
   assert.match(html, /canonical/i);
 });
+
+test("server-renders the target-size PDF compressor with SEO content", async () => {
+  const response = await render("/compress-pdf");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /<title>Compress PDF to 1 MB or a Custom Size Online \| Fill a PDF<\/title>/i);
+  assert.match(html, /<h1[^>]*>Compress a PDF to 1 MB\./i);
+  assert.match(html, /Choose a PDF to compress/i);
+  assert.match(html, /Target size/i);
+  assert.match(html, /FAQPage/i);
+  assert.match(html, /canonical/i);
+});

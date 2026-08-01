@@ -35,7 +35,7 @@ export default function ProtectPdfPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <header className="site-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">F</span><span>Fill a PDF</span></Link>
-        <nav aria-label="Main navigation"><Link href="/">Fill PDF</Link><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a><Link href="/privacy">Privacy</Link></nav>
+        <nav aria-label="Main navigation"><Link href="/">Fill PDF</Link><Link href="/compress-pdf">Compress PDF</Link><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a><Link href="/privacy">Privacy</Link></nav>
         <Link className="header-cta" href="/#tool">Fill a PDF</Link>
       </header>
 
@@ -68,7 +68,7 @@ export default function ProtectPdfPage() {
       <footer>
         <Link className="brand footer-brand" href="/"><span className="brand-mark" aria-hidden="true">F</span><span>Fill a PDF</span></Link>
         <p>Private PDF tools, right in your browser.</p>
-        <nav aria-label="Footer navigation"><Link href="/">Fill PDF</Link><Link href="/protect-pdf">Protect PDF</Link><Link href="/privacy">Privacy</Link></nav>
+        <nav aria-label="Footer navigation"><Link href="/">Fill PDF</Link><Link href="/compress-pdf">Compress PDF</Link><Link href="/protect-pdf">Protect PDF</Link><Link href="/privacy">Privacy</Link></nav>
         <small>© {new Date().getFullYear()} Fill a PDF. Your files stay yours.</small>
       </footer>
     </>

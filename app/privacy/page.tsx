@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <>
       <header className="site-header">
         <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">F</span><span>Fill a PDF</span></Link>
-        <nav aria-label="Main navigation"><Link href="/#how-it-works">How it works</Link><Link href="/protect-pdf">Protect PDF</Link><Link href="/#privacy">Privacy</Link><Link href="/#faq">FAQ</Link></nav>
+        <nav aria-label="Main navigation"><Link href="/#how-it-works">How it works</Link><Link href="/compress-pdf">Compress PDF</Link><Link href="/protect-pdf">Protect PDF</Link><Link href="/#privacy">Privacy</Link><Link href="/#faq">FAQ</Link></nav>
         <Link className="header-cta" href="/#tool">Fill a PDF</Link>
       </header>
       <main className="policy-main">
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
           <h2>Network access</h2>
           <p>The PDF libraries and worker are bundled with the site rather than loaded from a third-party content network. The site security policy prevents the editor from connecting to external services.</p>
           <h2>Keeping control of your file</h2>
-          <p>Closing or refreshing the tab clears the active editing or protection session. Your original PDF is not changed; a new filled or password-protected copy is created only when you choose Download.</p>
+          <p>Closing or refreshing the tab clears the active editing, compression, or protection session. Your original PDF is not changed; a new filled, compressed, or password-protected copy is created only when you choose Download.</p>
           <h2>Questions</h2>
           <p>This policy will be updated with a contact address when the final domain is selected. Until then, no personal information or document data is requested by the service.</p>
           <p><Link href="/">← Return to Fill a PDF</Link></p>
