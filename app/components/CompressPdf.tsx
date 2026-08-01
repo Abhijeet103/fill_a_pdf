@@ -1,10 +1,12 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { initialCompressionPlan, refineCompressionPlan } from "../lib/compression-plan";
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 const MAX_PAGES = 100;
-const MAX_CANVAS_PIXELS = 4_000_000;
+const MAX_CANVAS_PIXELS = 2_500_000;
+const MAX_COMPRESSION_PASSES = 2;
 
 type CompressionResult = {
   size: number;
@@ -155,6 +157,7 @@ export function CompressPdf() {
     setError("");
     setResult(null);
     compressedBytes.current = null;
+    const startedAt = performance.now();
 
     if (file.size <= targetBytes) {
       const copy = sourceBytes.current.slice();
@@ -173,24 +176,16 @@ export function CompressPdf() {
       pdfDocument = await pdfJs.getDocument({ data: sourceBytes.current.slice() }).promise as unknown as PdfJsDocument;
       if (pdfDocument.numPages > MAX_PAGES) throw new Error("TOO_MANY_PAGES");
 
-      let scale = 1.15;
-      let quality = 0.68;
+      let { scale, quality } = initialCompressionPlan(file.size, targetBytes);
       let smallest: Uint8Array | null = null;
 
-      for (let attempt = 1; attempt <= 5; attempt += 1) {
+      for (let attempt = 1; attempt <= MAX_COMPRESSION_PASSES; attempt += 1) {
         const candidate = await rasterizePdf(pdfDocument, pdfLib, scale, quality, (page) => {
-          setProgress(`Compression pass ${attempt} of 5 · Page ${page} of ${pdfDocument?.numPages ?? 0}`);
+          setProgress(`${attempt === 1 ? "Compressing" : "Fine-tuning"} · Page ${page} of ${pdfDocument?.numPages ?? 0}`);
         });
         if (!smallest || candidate.byteLength < smallest.byteLength) smallest = candidate;
         if (candidate.byteLength <= targetBytes) break;
-
-        const ratio = targetBytes / candidate.byteLength;
-        const scaleFactor = Math.max(0.62, Math.sqrt(ratio) * 0.96);
-        const nextScale = Math.max(0.38, scale * scaleFactor);
-        const nextQuality = Math.max(0.2, quality * Math.max(0.68, Math.pow(ratio, 0.34)));
-        if (nextScale === scale && nextQuality === quality) break;
-        scale = nextScale;
-        quality = nextQuality;
+        ({ scale, quality } = refineCompressionPlan({ scale, quality }, candidate.byteLength, targetBytes));
       }
 
       if (!smallest) throw new Error("NO_OUTPUT");
@@ -199,9 +194,11 @@ export function CompressPdf() {
       compressedBytes.current = downloadable;
       const metTarget = downloadable.byteLength <= targetBytes;
       setResult({ size: downloadable.byteLength, metTarget });
+      setIsCompressing(false);
+      const seconds = Math.max(0.1, (performance.now() - startedAt) / 1_000).toFixed(1);
       setProgress(metTarget
-        ? `Done. Your PDF is ${formatBytes(downloadable.byteLength)} and ready to download.`
-        : `Best readable result: ${formatBytes(downloadable.byteLength)}. This document could not safely reach ${formatBytes(targetBytes)}.`);
+        ? `Done in ${seconds}s. Your PDF is ${formatBytes(downloadable.byteLength)} and ready to download.`
+        : `Finished in ${seconds}s. Best readable result: ${formatBytes(downloadable.byteLength)}; this document could not safely reach ${formatBytes(targetBytes)}.`);
     } catch (caught) {
       const message = caught instanceof Error ? caught.message.toLowerCase() : "";
       if (message.includes("password")) setError("This PDF is password-protected. Unlock it in a trusted PDF app, then try again.");
@@ -209,8 +206,8 @@ export function CompressPdf() {
       else setError("We could not compress this PDF. It may be damaged or use an unsupported format.");
       setProgress("Compression was not completed.");
     } finally {
-      await pdfDocument?.destroy();
       setIsCompressing(false);
+      if (pdfDocument) void pdfDocument.destroy().catch(() => undefined);
     }
   }
 
