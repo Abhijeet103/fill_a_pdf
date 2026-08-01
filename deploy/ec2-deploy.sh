@@ -10,6 +10,20 @@ TLS_EMAIL="${1:-}"
 REPO_URL="${2:-https://github.com/Abhijeet103/fill_a_pdf.git}"
 BRANCH="${3:-main}"
 
+step() {
+  printf '\n==> %s\n' "$1"
+}
+
+deployment_error() {
+  local exit_code=$?
+  echo
+  echo "Deployment stopped at line ${BASH_LINENO[0]} with exit code ${exit_code}."
+  echo "Copy the last 30 lines of output if you need help."
+  exit "${exit_code}"
+}
+
+trap deployment_error ERR
+
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Run this deployment script with sudo."
   echo "Example: sudo bash deploy/ec2-deploy.sh you@example.com"
@@ -133,8 +147,13 @@ verify_dns() {
   echo "DNS verified: ${DOMAIN} points to this EC2 instance (${instance_public_ip})."
 }
 
+step "1/9 Installing required system packages"
 install_base_packages
+
+step "2/9 Checking that DNS points to this EC2 instance"
 verify_dns
+
+step "3/9 Installing Node.js 22"
 install_node
 ensure_build_swap
 
@@ -150,6 +169,7 @@ if ! id "${APP_USER}" >/dev/null 2>&1; then
     "${APP_USER}"
 fi
 
+step "4/9 Updating application source"
 if [[ -d "${APP_DIR}/.git" ]]; then
   systemctl stop "${APP_NAME}" 2>/dev/null || true
   runuser -u "${APP_USER}" -- git -C "${APP_DIR}" fetch origin "${BRANCH}"
@@ -164,13 +184,31 @@ else
     "${APP_DIR}"
 fi
 
+# If this command was launched from an older checkout, continue with the newly
+# pulled copy. This avoids running stale deployment logic after a git update.
+if [[ "${LOCALPDF_DEPLOY_REEXECED:-0}" != "1" ]]; then
+  step "Restarting with the latest deployment script"
+  exec env LOCALPDF_DEPLOY_REEXECED=1 \
+    "${APP_DIR}/deploy/ec2-deploy.sh" "${TLS_EMAIL}" "${REPO_URL}" "${BRANCH}"
+fi
+
 printf 'NEXT_PUBLIC_SITE_URL=%s\n' "${SITE_URL}" > "${APP_DIR}/.env.production"
 chown "${APP_USER}:${APP_USER}" "${APP_DIR}/.env.production"
 chmod 600 "${APP_DIR}/.env.production"
 
-runuser -u "${APP_USER}" -- /usr/bin/npm --prefix "${APP_DIR}" ci
-runuser -u "${APP_USER}" -- /usr/bin/npm --prefix "${APP_DIR}" run build
+step "5/9 Installing Node dependencies (this can take several minutes on a micro instance)"
+runuser -u "${APP_USER}" -- env \
+  NPM_CONFIG_PROGRESS=false \
+  NPM_CONFIG_AUDIT=false \
+  NPM_CONFIG_FUND=false \
+  timeout 15m /usr/bin/npm --prefix "${APP_DIR}" ci --loglevel=notice
 
+step "6/9 Building the production application (this can also take several minutes)"
+runuser -u "${APP_USER}" -- env \
+  NPM_CONFIG_PROGRESS=false \
+  timeout 20m /usr/bin/npm --prefix "${APP_DIR}" run build
+
+step "7/9 Configuring and starting systemd and Nginx"
 cat > "/etc/systemd/system/${APP_NAME}.service" <<EOF
 [Unit]
 Description=localpdf.store web application
@@ -252,6 +290,7 @@ for attempt in {1..20}; do
   sleep 1
 done
 
+step "8/9 Requesting and installing the TLS certificate"
 certbot --nginx \
   --non-interactive \
   --agree-tos \
@@ -285,6 +324,8 @@ EOF
 
 systemctl daemon-reload
 systemctl enable --now localpdf-certbot-renew.timer
+
+step "9/9 Testing automatic certificate renewal and public HTTPS"
 certbot renew --dry-run
 
 if ! curl --fail --silent --show-error "${SITE_URL}/" >/dev/null; then
