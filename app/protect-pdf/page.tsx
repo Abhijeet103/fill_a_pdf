@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ProtectPdf } from "../components/ProtectPdf";
+import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { SITE_URL } from "../lib/site";
 
 export const metadata: Metadata = {
-  title: { absolute: "Password Protect a PDF Online Free & Privately | Fill a PDF" },
+  title: { absolute: "Password Protect a PDF Online Free & Privately | PDF Slate" },
   description: "Add AES-256 password protection to a PDF in your browser. Free, private, and no upload, login, or payment required.",
   alternates: { canonical: `${SITE_URL}/protect-pdf` },
   openGraph: {
     title: "Password protect a PDF privately",
     description: "Add a password and download an encrypted PDF without uploading your document.",
     url: `${SITE_URL}/protect-pdf`,
-    siteName: "Fill a PDF",
+    siteName: "PDF Slate",
     type: "website",
   },
 };
@@ -33,11 +33,7 @@ export default function ProtectPdfPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-      <header className="site-header">
-        <Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">F</span><span>Fill a PDF</span></Link>
-        <nav aria-label="Main navigation"><Link href="/">Fill PDF</Link><Link href="/compress-pdf">Compress PDF</Link><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a><Link href="/privacy">Privacy</Link></nav>
-        <Link className="header-cta" href="/#tool">Fill a PDF</Link>
-      </header>
+      <SiteHeader />
 
       <main className="protect-main">
         <section className="protect-hero" aria-labelledby="protect-title">
@@ -65,12 +61,7 @@ export default function ProtectPdfPage() {
         </section>
       </main>
 
-      <footer>
-        <Link className="brand footer-brand" href="/"><span className="brand-mark" aria-hidden="true">F</span><span>Fill a PDF</span></Link>
-        <p>Private PDF tools, right in your browser.</p>
-        <nav aria-label="Footer navigation"><Link href="/">Fill PDF</Link><Link href="/compress-pdf">Compress PDF</Link><Link href="/protect-pdf">Protect PDF</Link><Link href="/privacy">Privacy</Link></nav>
-        <small>© {new Date().getFullYear()} Fill a PDF. Your files stay yours.</small>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

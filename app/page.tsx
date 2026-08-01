@@ -1,215 +1,56 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PdfFiller } from "./components/PdfFiller";
+import { SiteFooter, SiteHeader } from "./components/SiteChrome";
 import { SITE_URL } from "./lib/site";
 
 export const metadata: Metadata = {
-  title: { absolute: "Fill a PDF Online Free & Privately | Fill a PDF" },
-  description:
-    "Fill PDF forms online for free without uploading your file. Everything runs privately in your browser, then downloads straight to your device.",
+  title: { absolute: "Free Private PDF Tools Online — Fill, Compress, Merge, Split & Protect | PDF Slate" },
+  description: "Free PDF tools that run privately in your browser. Fill forms, compress to a target size, merge, split, and password-protect PDFs with no uploads or account.",
   alternates: { canonical: SITE_URL },
-  openGraph: {
-    title: "Fill a PDF — Private, free PDF form filler",
-    description: "Fill and download PDFs without uploading them. Your file stays on your device.",
-    url: SITE_URL,
-    siteName: "Fill a PDF",
-    type: "website",
-    images: [{ url: `${SITE_URL}/og.png`, width: 1200, height: 630, alt: "Fill a PDF — private PDF form filling in your browser" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Fill a PDF — Private, free PDF form filler",
-    description: "Fill and download PDFs without uploading them.",
-    images: [`${SITE_URL}/og.png`],
-  },
+  openGraph: { title: "PDF Slate — Private PDF tools in your browser", description: "Fill, compress, merge, split, and protect PDFs without uploading your files.", url: SITE_URL, siteName: "PDF Slate", type: "website", images: [{ url: `${SITE_URL}/og-pdf-slate.png`, width: 1729, height: 910, alt: "PDF Slate private browser-based PDF tools" }] },
+  twitter: { card: "summary_large_image", title: "PDF Slate — Private PDF tools", description: "Free PDF tools with no uploads, login, or payment.", images: [`${SITE_URL}/og-pdf-slate.png`] },
 };
 
-const faqs = [
-  {
-    question: "Can I fill a PDF form online for free?",
-    answer: "Yes. Fill a PDF is free to use, with no account, trial, or payment details required. Choose a PDF, complete its fields, and download the filled copy.",
-  },
-  {
-    question: "Does my PDF get uploaded?",
-    answer: "No. The file is opened, rendered, edited, and saved by code running in your browser. Its contents are never sent to our server or a third party.",
-  },
-  {
-    question: "Can I fill a PDF that has no form fields?",
-    answer: "Yes. If a PDF has no interactive fields, place text directly onto any page, adjust the size, and download a new copy with the text added.",
-  },
-  {
-    question: "Will the original PDF formatting change?",
-    answer: "The original PDF is loaded and only its field values or your placed text are added. Pages are not converted to images or rebuilt, so the existing layout remains intact.",
-  },
-  {
-    question: "What does Lock values do?",
-    answer: "Lock values bakes completed form fields into the document so they look consistent in more PDF readers. Turn it off when recipients should still be able to edit the fields.",
-  },
-  {
-    question: "Are password-protected PDFs supported?",
-    answer: "PDFs that require a password cannot currently be opened. Remove the password in a trusted PDF app, then try the unlocked copy here.",
-  },
-  {
-    question: "Does Fill a PDF support XFA forms?",
-    answer: "Not yet. XFA forms, often created with Adobe LiveCycle, use a different form system. The tool identifies them and explains the limitation instead of producing an unreliable file.",
-  },
-  {
-    question: "Can I use it on a phone or tablet?",
-    answer: "Yes. The editor adapts to smaller screens, supports touch, and keeps the field controls in a collapsible panel so the document stays readable.",
-  },
+const tools = [
+  { href: "/fill-pdf", icon: "Aa", title: "Fill PDF", search: "Fill out PDF forms online", description: "Complete interactive form fields or place text onto a flat PDF, then download your copy.", accent: "blue" },
+  { href: "/compress-pdf", icon: "↘", title: "Compress PDF", search: "Compress PDF to 1 MB", description: "Choose a target size and make your PDF smaller while it stays on your device.", accent: "indigo" },
+  { href: "/merge-pdf", icon: "⇄", title: "Merge PDF", search: "Combine PDF files in order", description: "Arrange up to 20 PDFs and combine every page into one downloadable document.", accent: "teal" },
+  { href: "/split-pdf", icon: "÷", title: "Split PDF", search: "Extract or remove PDF pages", description: "Select page numbers or ranges to create a new PDF containing exactly the pages you need.", accent: "slate" },
+  { href: "/protect-pdf", icon: "⌑", title: "Protect PDF", search: "Password protect PDF with AES-256", description: "Add an opening password and download a securely encrypted PDF without uploading it.", accent: "violet" },
 ];
 
-const applicationJsonLd = {
-  "@context": "https://schema.org",
-  "@type": ["WebApplication", "SoftwareApplication"],
-  name: "Fill a PDF",
-  url: SITE_URL,
-  applicationCategory: "UtilitiesApplication",
-  operatingSystem: "Any device with a modern web browser",
-  browserRequirements: "Requires JavaScript for PDF editing",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-  featureList: [
-    "Fill PDF forms in the browser",
-    "No file uploads",
-    "Place text on flat PDFs",
-    "Lock or preserve editable form fields",
-    "Free with no account required",
-  ],
-};
+const faqs = [
+  { question: "Are PDF Slate tools free?", answer: "Yes. Every current tool is free with no account, trial, payment, watermark, or usage paywall." },
+  { question: "Do my PDF files get uploaded?", answer: "No. PDF Slate processes your documents with code running in your browser. File contents, filenames, form values, and passwords are not sent to our server." },
+  { question: "Which PDF tools are available?", answer: "You can fill PDF forms, compress PDFs toward a chosen size, merge multiple PDFs, split or extract pages, and add AES-256 password protection." },
+  { question: "Can I use PDF Slate on mobile?", answer: "Yes. Every tool adapts to phones and tablets, though large documents may process faster on a desktop computer with more memory." },
+];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map(({ question, answer }) => ({
-    "@type": "Question",
-    name: question,
-    acceptedAnswer: { "@type": "Answer", text: answer },
-  })),
-};
+const softwareJsonLd = { "@context": "https://schema.org", "@type": "WebApplication", name: "PDF Slate", url: SITE_URL, applicationCategory: "UtilitiesApplication", operatingSystem: "Any modern browser", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" }, featureList: tools.map((tool) => tool.search) };
+const itemListJsonLd = { "@context": "https://schema.org", "@type": "ItemList", name: "Free online PDF tools", itemListElement: tools.map((tool, index) => ({ "@type": "ListItem", position: index + 1, name: tool.search, url: `${SITE_URL}${tool.href}` })) };
+const faqJsonLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map(({ question, answer }) => ({ "@type": "Question", name: question, acceptedAnswer: { "@type": "Answer", text: answer } })) };
 
 export default function Home() {
-  return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(applicationJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+  return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+    <SiteHeader />
+    <main id="top">
+      <section className="hub-hero" aria-labelledby="hub-title">
+        <div className="hub-hero-copy"><p className="eyebrow"><span aria-hidden="true">●</span> Private by design · Free to use</p><h1 id="hub-title">Everyday PDF tools.<br /><em>Nothing leaves your browser.</em></h1><p>Fill, compress, merge, split, and protect PDFs without uploads, accounts, payments, or watermarks. Choose the exact tool you need.</p><div className="hero-actions"><a className="button button-primary" href="#tools">Explore PDF tools <span aria-hidden="true">↓</span></a><span className="no-account">0 bytes uploaded · No login</span></div></div>
+        <div className="hub-tool-stack" aria-hidden="true"><div className="stack-sheet back"><span>PDF</span></div><div className="stack-sheet middle"><span>PDF</span></div><div className="stack-sheet front"><div className="mini-tool-row"><i>Aa</i><i>↘</i><i>⇄</i><i>÷</i><i>⌑</i></div><b>Your private PDF workspace</b><small>Runs on this device</small><div className="stack-lines"><i /><i /><i /></div></div><div className="privacy-chip"><span>✓</span><strong>Files stay local</strong><small>No server processing</small></div></div>
+      </section>
 
-      <header className="site-header">
-        <a className="brand" href="#top">
-          <span className="brand-mark" aria-hidden="true">F</span>
-          <span>Fill a PDF</span>
-        </a>
-        <nav aria-label="Main navigation">
-          <a href="#how-it-works">How it works</a>
-          <Link href="/compress-pdf">Compress PDF</Link>
-          <Link href="/protect-pdf">Protect PDF</Link>
-          <a href="#privacy">Privacy</a>
-          <a href="#faq">FAQ</a>
-        </nav>
-        <a className="header-cta" href="#tool">Fill a PDF</a>
-      </header>
+      <section id="tools" className="tools-hub" aria-labelledby="tools-title"><div className="section-intro centered"><p className="eyebrow">Choose a task</p><h2 id="tools-title">Free online PDF tools</h2><p>Each tool has its own focused workspace and direct link, so you can get straight to the job.</p></div><div className="tool-card-grid">{tools.map((tool) => <Link className={`tool-card ${tool.accent}`} href={tool.href} key={tool.href}><span className="tool-card-icon" aria-hidden="true">{tool.icon}</span><div><p>{tool.search}</p><h2>{tool.title}</h2><span>{tool.description}</span></div><b aria-hidden="true">→</b></Link>)}</div></section>
 
-      <main id="top">
-        <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-copy">
-            <p className="eyebrow"><span aria-hidden="true">●</span> Private by design · Free to use</p>
-            <h1 id="hero-title">Fill a PDF online.<br /><em>Keep it private.</em></h1>
-            <p className="hero-lede">Complete PDF forms and add text right in your browser. Your document never gets uploaded, stored, or seen by us.</p>
-            <div className="hero-actions">
-              <a className="button button-primary" href="#tool">Choose your PDF <span aria-hidden="true">↓</span></a>
-              <span className="no-account">No login. No payment. No uploads.</span>
-            </div>
-          </div>
-          <div className="hero-proof" aria-label="How Fill a PDF protects your document">
-            <div className="proof-window">
-              <div className="window-bar" aria-hidden="true"><i /><i /><i /><span>your-device</span></div>
-              <div className="document-card" aria-hidden="true">
-                <div className="doc-heading" />
-                <div className="doc-line short" />
-                <div className="doc-fields"><b /><b /></div>
-                <div className="doc-line" /><div className="doc-line" />
-                <div className="doc-signature">Signed safely</div>
-              </div>
-              <div className="privacy-chip"><span aria-hidden="true">✓</span><strong>Stays on this device</strong><small>0 bytes uploaded</small></div>
-            </div>
-          </div>
-        </section>
+      <section className="trust-strip" aria-label="Product promises"><div><span aria-hidden="true">◎</span><strong>100% browser-based</strong><small>No file uploads</small></div><div><span aria-hidden="true">$0</span><strong>Actually free</strong><small>No login or payment</small></div><div><span aria-hidden="true">◇</span><strong>Purpose-built pages</strong><small>Go directly to your tool</small></div><div><span aria-hidden="true">↯</span><strong>Works on any device</strong><small>Responsive and touch-friendly</small></div></section>
 
-        <section id="tool" className="tool-section" aria-labelledby="tool-heading">
-          <div className="section-intro centered">
-            <p className="eyebrow">Your private workspace</p>
-            <h2 id="tool-heading">Fill your PDF now</h2>
-            <p>Choose a document to begin. The editing tools load only after your PDF is selected.</p>
-          </div>
-          <PdfFiller />
-        </section>
+      <section className="privacy-section" aria-labelledby="privacy-title"><div className="privacy-visual" aria-hidden="true"><div className="device-ring"><div className="device-card"><span>PDF</span><i>✓</i></div></div><p>Your device</p><small>Secure browser workspace</small></div><div className="privacy-copy"><p className="eyebrow">Privacy you can verify</p><h2 id="privacy-title">Your documents stay on your device</h2><p>Traditional online PDF services upload documents for processing. PDF Slate uses browser-based libraries, so the work happens locally in the current tab.</p><ul><li><span>✓</span><div><strong>No uploads</strong><p>Document bytes are never transmitted to us or a third party.</p></div></li><li><span>✓</span><div><strong>No document storage</strong><p>Refreshing or closing the tab clears the active workspace.</p></div></li><li><span>✓</span><div><strong>No accounts or payments</strong><p>Use every current PDF tool without sharing personal details.</p></div></li></ul><Link href="/privacy">Read the plain-language privacy policy <span aria-hidden="true">→</span></Link></div></section>
 
-        <section className="trust-strip" aria-label="Product promises">
-          <div><span aria-hidden="true">◎</span><strong>100% browser-based</strong><small>No server processing</small></div>
-          <div><span aria-hidden="true">↯</span><strong>Fast and lightweight</strong><small>Tools load when needed</small></div>
-          <div><span aria-hidden="true">◇</span><strong>Formatting preserved</strong><small>Original PDF stays a PDF</small></div>
-          <div><span aria-hidden="true">$0</span><strong>Actually free</strong><small>No account or paywall</small></div>
-        </section>
-
-        <section id="how-it-works" className="content-section steps-section" aria-labelledby="how-title">
-          <div className="section-intro">
-            <p className="eyebrow">Simple by default</p>
-            <h2 id="how-title">How to fill a PDF online</h2>
-            <p>Three steps, entirely on your device. There is nothing to install and no account to create.</p>
-          </div>
-          <ol className="steps-grid">
-            <li><span>01</span><div className="step-icon" aria-hidden="true">↥</div><h3>Choose your PDF</h3><p>Pick a PDF from your device or drag it into the private workspace above.</p></li>
-            <li><span>02</span><div className="step-icon" aria-hidden="true">Aa</div><h3>Fill in the details</h3><p>Complete detected fields, or click a page to place text on a flat PDF.</p></li>
-            <li><span>03</span><div className="step-icon" aria-hidden="true">↓</div><h3>Download your copy</h3><p>Lock values for consistent viewing or keep form fields editable for later.</p></li>
-          </ol>
-        </section>
-
-        <section id="privacy" className="privacy-section" aria-labelledby="privacy-title">
-          <div className="privacy-visual" aria-hidden="true">
-            <div className="device-ring"><div className="device-card"><span>PDF</span><i>✓</i></div></div>
-            <p>Your device</p><small>Secure browser workspace</small>
-          </div>
-          <div className="privacy-copy">
-            <p className="eyebrow">Privacy you don’t have to trust</p>
-            <h2 id="privacy-title">Your file never leaves your browser</h2>
-            <p>Many online PDF tools send documents to a remote server. Fill a PDF works differently: the editor runs locally in your browser, using a separate working copy while preserving the original bytes for export.</p>
-            <ul>
-              <li><span>✓</span><div><strong>No uploads</strong><p>Your document is never transmitted to us or any third party.</p></div></li>
-              <li><span>✓</span><div><strong>No storage</strong><p>We cannot retain a file we never receive.</p></div></li>
-              <li><span>✓</span><div><strong>No document tracking</strong><p>No filenames, field values, or file contents are collected.</p></div></li>
-            </ul>
-            <Link href="/privacy">Read the plain-language privacy policy <span aria-hidden="true">→</span></Link>
-          </div>
-        </section>
-
-        <section id="faq" className="content-section faq-section" aria-labelledby="faq-title">
-          <div className="section-intro centered">
-            <p className="eyebrow">Good to know</p>
-            <h2 id="faq-title">Frequently asked questions</h2>
-          </div>
-          <div className="faq-list">
-            {faqs.map((faq, index) => (
-              <details key={faq.question} open={index === 0}>
-                <summary>{faq.question}<span aria-hidden="true">+</span></summary>
-                <p>{faq.answer}</p>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        <section className="final-cta" aria-labelledby="cta-title">
-          <p className="eyebrow">Ready when you are</p>
-          <h2 id="cta-title">Fill the form. Not someone else’s server.</h2>
-          <p>Private PDF filling with no uploads, no account, and no hidden cost.</p>
-          <a className="button button-light" href="#tool">Fill a PDF for free <span aria-hidden="true">↑</span></a>
-        </section>
-      </main>
-
-      <footer>
-        <a className="brand footer-brand" href="#top"><span className="brand-mark" aria-hidden="true">F</span><span>Fill a PDF</span></a>
-        <p>Private PDF form filling, right in your browser.</p>
-        <nav aria-label="Footer navigation"><Link href="/compress-pdf">Compress PDF</Link><Link href="/protect-pdf">Protect PDF</Link><Link href="/privacy">Privacy</Link><a href="#faq">FAQ</a><a href="#tool">Use the tool</a></nav>
-        <small>© {new Date().getFullYear()} Fill a PDF. Your files stay yours.</small>
-      </footer>
-    </>
-  );
+      <section id="faq" className="content-section faq-section" aria-labelledby="faq-title"><div className="section-intro centered"><p className="eyebrow">PDF Slate FAQ</p><h2 id="faq-title">Common questions about our PDF tools</h2></div><div className="faq-list">{faqs.map((faq, index) => <details key={faq.question} open={index === 0}><summary>{faq.question}<span aria-hidden="true">+</span></summary><p>{faq.answer}</p></details>)}</div></section>
+      <section className="final-cta" aria-labelledby="cta-title"><p className="eyebrow">Pick a tool and start</p><h2 id="cta-title">Your PDF. Your browser. Your choice.</h2><p>Private document tools without the upload queue or account wall.</p><a className="button button-light" href="#tools">View all PDF tools <span aria-hidden="true">↑</span></a></section>
+    </main>
+    <SiteFooter />
+  </>;
 }
