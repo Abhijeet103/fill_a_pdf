@@ -1,0 +1,269 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+APP_NAME="localpdf-store"
+APP_USER="localpdf"
+APP_DIR="/opt/localpdf-store"
+DOMAIN="localpdf.store"
+SITE_URL="https://${DOMAIN}"
+TLS_EMAIL="${1:-}"
+REPO_URL="${2:-https://github.com/Abhijeet103/fill_a_pdf.git}"
+BRANCH="${3:-main}"
+
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "Run this deployment script with sudo."
+  echo "Example: sudo bash deploy/ec2-deploy.sh you@example.com"
+  exit 1
+fi
+
+if [[ ! "${TLS_EMAIL}" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then
+  echo "Provide a valid email address for Let's Encrypt notices."
+  echo "Example: sudo bash deploy/ec2-deploy.sh you@example.com"
+  exit 1
+fi
+
+install_base_packages() {
+  if command -v apt-get >/dev/null 2>&1; then
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      ca-certificates curl dnsutils git gnupg nginx certbot python3-certbot-nginx
+  elif command -v dnf >/dev/null 2>&1; then
+    dnf install -y \
+      ca-certificates curl bind-utils git nginx certbot python3-certbot-nginx
+  elif command -v yum >/dev/null 2>&1; then
+    yum install -y \
+      ca-certificates curl bind-utils git nginx certbot python3-certbot-nginx
+  else
+    echo "Unsupported Linux distribution."
+    echo "Use Ubuntu, Debian, Amazon Linux 2023, or RHEL-compatible Linux."
+    exit 1
+  fi
+}
+
+node_major_version() {
+  if [[ ! -x /usr/bin/node || ! -x /usr/bin/npm ]]; then
+    echo 0
+    return
+  fi
+  /usr/bin/node --version | sed -E 's/^v([0-9]+).*/\1/'
+}
+
+install_node() {
+  if (( "$(node_major_version)" >= 22 )); then
+    return
+  fi
+
+  if command -v apt-get >/dev/null 2>&1; then
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
+  else
+    curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+    if command -v dnf >/dev/null 2>&1; then
+      dnf install -y nodejs
+    else
+      yum install -y nodejs
+    fi
+  fi
+}
+
+ensure_build_swap() {
+  local memory_kb swap_kb
+  memory_kb="$(awk '/MemTotal:/ { print $2 }' /proc/meminfo)"
+  swap_kb="$(awk '/SwapTotal:/ { print $2 }' /proc/meminfo)"
+
+  if (( memory_kb >= 1800000 || swap_kb >= 1000000 )); then
+    return
+  fi
+
+  echo "Adding 2 GB of swap for the production build."
+  if [[ ! -f /swapfile ]]; then
+    fallocate -l 2G /swapfile || \
+      dd if=/dev/zero of=/swapfile bs=1M count=2048 status=progress
+    chmod 600 /swapfile
+    mkswap /swapfile
+  fi
+
+  swapon /swapfile
+  if ! grep -qF '/swapfile none swap sw 0 0' /etc/fstab; then
+    echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  fi
+}
+
+verify_dns() {
+  local resolved_addresses
+  resolved_addresses="$(getent ahostsv4 "${DOMAIN}" | awk '{ print $1 }' | sort -u | paste -sd ', ' -)"
+
+  if [[ -z "${resolved_addresses}" ]]; then
+    echo "DNS is not ready for ${DOMAIN}."
+    echo "Create an A record pointing ${DOMAIN} to this EC2 instance's public IP, then run the script again."
+    exit 1
+  fi
+
+  echo "${DOMAIN} currently resolves to: ${resolved_addresses}"
+  echo "Certificate validation will confirm that it reaches this EC2 instance."
+}
+
+install_base_packages
+install_node
+ensure_build_swap
+
+if (( "$(node_major_version)" < 22 )); then
+  echo "Node.js 22 or newer could not be installed."
+  exit 1
+fi
+
+if ! id "${APP_USER}" >/dev/null 2>&1; then
+  useradd --system --create-home \
+    --home-dir "/var/lib/${APP_USER}" \
+    --shell /usr/sbin/nologin \
+    "${APP_USER}"
+fi
+
+if [[ -d "${APP_DIR}/.git" ]]; then
+  systemctl stop "${APP_NAME}" 2>/dev/null || true
+  runuser -u "${APP_USER}" -- git -C "${APP_DIR}" fetch origin "${BRANCH}"
+  runuser -u "${APP_USER}" -- git -C "${APP_DIR}" checkout "${BRANCH}"
+  runuser -u "${APP_USER}" -- git -C "${APP_DIR}" merge --ff-only "origin/${BRANCH}"
+else
+  install -d -o "${APP_USER}" -g "${APP_USER}" "${APP_DIR}"
+  runuser -u "${APP_USER}" -- git clone \
+    --branch "${BRANCH}" \
+    --single-branch \
+    "${REPO_URL}" \
+    "${APP_DIR}"
+fi
+
+printf 'NEXT_PUBLIC_SITE_URL=%s\n' "${SITE_URL}" > "${APP_DIR}/.env.production"
+chown "${APP_USER}:${APP_USER}" "${APP_DIR}/.env.production"
+chmod 600 "${APP_DIR}/.env.production"
+
+runuser -u "${APP_USER}" -- /usr/bin/npm --prefix "${APP_DIR}" ci
+runuser -u "${APP_USER}" -- /usr/bin/npm --prefix "${APP_DIR}" run build
+
+cat > "/etc/systemd/system/${APP_NAME}.service" <<EOF
+[Unit]
+Description=localpdf.store web application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=${APP_USER}
+Group=${APP_USER}
+WorkingDirectory=${APP_DIR}
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=VINEXT_TRUST_PROXY=1
+ExecStart=/usr/bin/npm start -- --hostname 127.0.0.1 --port 3000
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+cat > "/etc/nginx/conf.d/${APP_NAME}.conf" <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name ${DOMAIN};
+
+    client_max_body_size 1m;
+
+    location ^~ /assets/ {
+        root ${APP_DIR}/dist/client;
+        access_log off;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files \$uri =404;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 60s;
+    }
+}
+EOF
+
+rm -f /etc/nginx/sites-enabled/default
+rm -f /etc/nginx/conf.d/default.conf
+
+nginx -t
+systemctl daemon-reload
+systemctl enable --now "${APP_NAME}"
+systemctl enable --now nginx
+systemctl reload nginx
+
+for attempt in {1..20}; do
+  if curl --fail --silent --show-error \
+    --header "Host: ${DOMAIN}" \
+    http://127.0.0.1/ >/dev/null; then
+    break
+  fi
+  if [[ "${attempt}" -eq 20 ]]; then
+    echo "The HTTP health check failed."
+    echo "Inspect logs with: journalctl -u ${APP_NAME} -n 100 --no-pager"
+    exit 1
+  fi
+  sleep 1
+done
+
+verify_dns
+
+certbot --nginx \
+  --non-interactive \
+  --agree-tos \
+  --redirect \
+  --keep-until-expiring \
+  --email "${TLS_EMAIL}" \
+  --domains "${DOMAIN}"
+
+cat > /etc/systemd/system/localpdf-certbot-renew.service <<'EOF'
+[Unit]
+Description=Renew Let's Encrypt certificates
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/certbot renew --quiet
+ExecStartPost=/usr/bin/systemctl reload nginx
+EOF
+
+cat > /etc/systemd/system/localpdf-certbot-renew.timer <<'EOF'
+[Unit]
+Description=Check Let's Encrypt certificates twice daily
+
+[Timer]
+OnCalendar=*-*-* 00,12:00:00
+RandomizedDelaySec=3600
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now localpdf-certbot-renew.timer
+certbot renew --dry-run
+
+if ! curl --fail --silent --show-error "${SITE_URL}/" >/dev/null; then
+  echo "HTTPS was configured, but the public HTTPS health check failed."
+  echo "Confirm that the EC2 security group allows inbound TCP ports 80 and 443."
+  exit 1
+fi
+
+echo "Deployment complete: ${SITE_URL}"
+echo "Automatic certificate renewal is enabled."
+echo "Allow inbound TCP ports 80 and 443 in the EC2 security group."

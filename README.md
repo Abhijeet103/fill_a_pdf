@@ -62,20 +62,18 @@ Tests cover PDF form mutation, coordinates, password encryption, merging, page e
 
 The app builds to Cloudflare Worker-compatible ESM and requires no database, storage bucket, authentication provider, or PDF service. Configure `NEXT_PUBLIC_SITE_URL`, run the production build, and deploy the generated site through Sites or another compatible static/edge host.
 
-### EC2 with Nginx
+### EC2 with Nginx and HTTPS
 
-For Ubuntu, Debian, Amazon Linux 2023, or RHEL-compatible EC2 instances, the one-time installer adds Git, Node.js 22, Nginx, and a systemd service. Nginx listens on port 80 and proxies to vinext on private port 3000.
+For Ubuntu, Debian, Amazon Linux 2023, or RHEL-compatible EC2 instances, the deployment script adds Git, Node.js 22, Nginx, Certbot, a systemd application service, and automatic TLS renewal. Nginx serves `localpdf.store` on ports 80 and 443 and proxies to vinext on private port 3000.
 On instances with less than 1.8 GB of memory, it also creates a 2 GB swap file so the production build can complete reliably.
 
 ```bash
-git clone https://github.com/Abhijeet103/fill_a_pdf.git
-cd fill_a_pdf
-sudo bash deploy/ec2-setup.sh \
-  https://github.com/Abhijeet103/fill_a_pdf.git \
-  http://your-domain.example
+sudo bash deploy/ec2-deploy.sh you@example.com
 ```
 
-Use `http://YOUR_EC2_PUBLIC_IP` as the second argument until a domain is ready. The instance security group must allow inbound TCP port 80. Configure a TLS certificate before changing `NEXT_PUBLIC_SITE_URL` to an `https://` URL. For later releases, run:
+Before running it, point the `localpdf.store` DNS A record to the EC2 public IP and allow inbound TCP ports 80 and 443 in the instance security group. The first argument is the email address used for Let's Encrypt notices. The optional second and third arguments override the Git repository URL and branch.
+
+Run the same script for future releases, or use the smaller updater after the initial HTTPS deployment:
 
 ```bash
 cd /opt/localpdf-store
