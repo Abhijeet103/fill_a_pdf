@@ -44,6 +44,22 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    build: {
+      rolldownOptions: {
+        output: {
+          // Amazon Linux's default Nginx MIME table serves .mjs as
+          // application/octet-stream, which browsers reject for module workers.
+          // Emit module assets as .js so the PDF.js worker receives the correct
+          // application/javascript content type without server-specific changes.
+          assetFileNames: (assetInfo) => {
+            const sourceName = assetInfo.names?.[0] ?? "";
+            return sourceName.endsWith(".mjs")
+              ? "assets/[name]-[hash].js"
+              : "assets/[name]-[hash][extname]";
+          },
+        },
+      },
+    },
     server: isCodexSeatbeltSandbox
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
