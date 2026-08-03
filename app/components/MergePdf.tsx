@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { reportClientError } from "../lib/client-errors";
 import { mergePdfBytes } from "../lib/pdf-organize";
 
 const MAX_FILES = 20;
@@ -44,7 +45,10 @@ export function MergePdf() {
       else if (code === "FILE_TOO_LARGE") setError("Each PDF must be 50 MB or smaller.");
       else if (code === "TOTAL_TOO_LARGE") setError("The selected PDFs are over the 150 MB combined limit.");
       else if (code === "NOT_PDF") setError("One of the selected files is not a valid PDF.");
-      else setError("We could not read one of those files. Please try again.");
+      else {
+        reportClientError("merge.read-files", caught, { selectedFileCount: selected.length, existingFileCount: files.length });
+        setError("We could not read one of those files. Please try again.");
+      }
     }
   }
 
@@ -102,6 +106,10 @@ export function MergePdf() {
       window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
       setStatus(`Merged PDF downloaded with ${files.length} source documents.`);
     } catch (caught) {
+      reportClientError("merge.process", caught, {
+        fileCount: files.length,
+        totalBytes: files.reduce((sum, item) => sum + item.bytes.byteLength, 0),
+      });
       setError(caught instanceof Error && caught.message === "ENCRYPTED" ? "One of these PDFs is password-protected. Unlock it first, then try again." : "The PDFs could not be merged. One may be damaged or use an unsupported format.");
       setStatus("Merge was not completed.");
     } finally {

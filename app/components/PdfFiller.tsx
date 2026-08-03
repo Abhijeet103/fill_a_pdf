@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { reportClientError, reportClientWarning } from "../lib/client-errors";
 import { applyFieldValues, canvasPointToPdf, fieldKindFromConstructor, friendlyFieldName, inferFieldLabel, type PdfFieldState, type PdfTextLabelItem, type TextOverlay } from "../lib/pdf-utils";
 import type { PDFDocument as PdfLibDocument, PDFField } from "pdf-lib";
 
@@ -17,11 +18,24 @@ type PdfJsPage = {
 type PdfJsDocument = {
   numPages: number;
   getPage(pageNumber: number): Promise<PdfJsPage>;
+};
+
+type PdfJsLoadingTask = {
+  promise: Promise<PdfJsDocument>;
   destroy(): Promise<void>;
 };
 
 function bytesLookLikePdf(bytes: Uint8Array) {
   return new TextDecoder("ascii").decode(bytes.slice(0, 5)) === "%PDF-";
+}
+
+function isStalePdfEngineError(cause: unknown) {
+  const message = cause instanceof Error ? cause.message.toLowerCase() : String(cause).toLowerCase();
+  return message.includes("dynamically imported module")
+    || message.includes("failed to fetch")
+    || message.includes("chunkloaderror")
+    || message.includes("loading chunk")
+    || message.includes("worker");
 }
 
 function readFieldState(field: PDFField, pdfLib: typeof import("pdf-lib")): PdfFieldState {
@@ -77,6 +91,7 @@ export function PdfFiller() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pristineBytes = useRef<Uint8Array | null>(null);
   const pdfJsDocument = useRef<PdfJsDocument | null>(null);
+  const pdfJsLoadingTask = useRef<PdfJsLoadingTask | null>(null);
   const [currentPageHeight, setCurrentPageHeight] = useState(0);
   const [fileName, setFileName] = useState("");
   const [fields, setFields] = useState<PdfFieldState[]>([]);
@@ -110,10 +125,21 @@ export function PdfFiller() {
   }, []);
 
   useEffect(() => {
-    if (pageCount) void renderPage(pageIndex);
+    if (pageCount) {
+      void renderPage(pageIndex).catch((cause) => {
+        reportClientError("fill.render-preview", cause, { page: pageIndex + 1, pageCount });
+        setError("The PDF opened, but its page preview could not be rendered. Try refreshing the page.");
+      });
+    }
   }, [pageCount, pageIndex, renderPage]);
 
-  useEffect(() => () => { void pdfJsDocument.current?.destroy(); }, []);
+  useEffect(() => () => {
+    pdfJsDocument.current = null;
+    void pdfJsLoadingTask.current?.destroy().catch((cause) => {
+      reportClientWarning("fill.cleanup-on-unmount", cause);
+    });
+    pdfJsLoadingTask.current = null;
+  }, []);
 
   async function loadFile(file: File) {
     setError("");
@@ -127,6 +153,7 @@ export function PdfFiller() {
     }
     setBusy(true);
     setStatus("Checking your PDF locally…");
+    let nextLoadingTask: PdfJsLoadingTask | null = null;
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       if (!bytesLookLikePdf(bytes)) throw new Error("NOT_PDF");
@@ -147,9 +174,15 @@ export function PdfFiller() {
       if (form.hasXFA()) throw new Error("XFA");
       const detected = form.getFields().map((field) => readFieldState(field, pdfLib)).filter((field) => field.kind !== "unknown");
 
-      await pdfJsDocument.current?.destroy();
-      const displayDocument = await pdfJs.getDocument({ data: bytes.slice() }).promise as unknown as PdfJsDocument;
+      await pdfJsLoadingTask.current?.destroy();
+      pdfJsLoadingTask.current = null;
+      pdfJsDocument.current = null;
+
+      nextLoadingTask = pdfJs.getDocument({ data: bytes.slice() }) as unknown as PdfJsLoadingTask;
+      const displayDocument = await nextLoadingTask.promise;
       const inferredLabels = await inferVisibleFieldLabels(displayDocument);
+      pdfJsLoadingTask.current = nextLoadingTask;
+      nextLoadingTask = null;
       pdfJsDocument.current = displayDocument;
       setFileName(file.name);
       setFields(detected.map((field) => ({ ...field, label: inferredLabels.get(field.name) || friendlyFieldName(field.name) })));
@@ -165,7 +198,12 @@ export function PdfFiller() {
       if (code === "NOT_PDF") setError("This file does not contain a valid PDF. Choose an original .pdf document.");
       else if (code === "ENCRYPTED") setError("This PDF is password-protected. Unlock it in a trusted PDF app, then try again.");
       else if (code === "XFA") setError("This XFA form type is not supported yet. Open it in Adobe Acrobat or request a standard AcroForm version.");
+      else if (isStalePdfEngineError(cause)) setError("The PDF tools were updated while this tab was open. Refresh this page, then choose your PDF again.");
       else setError("This PDF could not be opened. It may be damaged or use an unsupported format.");
+      reportClientError("fill.open", cause, { fileSize: file.size, mimeType: file.type || "unknown" });
+      await nextLoadingTask?.destroy().catch((cleanupCause) => {
+        reportClientWarning("fill.cleanup-after-open-error", cleanupCause);
+      });
       pristineBytes.current = null;
       setPageCount(0);
     } finally {
@@ -184,6 +222,19 @@ export function PdfFiller() {
     setIsDragging(false);
     const file = event.dataTransfer.files?.[0];
     if (file) void loadFile(file);
+  }
+
+  function chooseAnotherPdf() {
+    pdfJsDocument.current = null;
+    void pdfJsLoadingTask.current?.destroy().catch((cause) => {
+      reportClientWarning("fill.cleanup-before-new-file", cause);
+    });
+    pdfJsLoadingTask.current = null;
+    pristineBytes.current = null;
+    setPageCount(0);
+    setFields([]);
+    setOverlays([]);
+    setStatus("Choose a PDF to start filling it privately.");
   }
 
   function updateField(name: string, value: PdfFieldState["value"]) {
@@ -228,7 +279,11 @@ export function PdfFiller() {
         }
       }
       if (lockValues && fields.length) {
-        try { form.flatten(); } catch { flattenFailed = true; }
+        try { form.flatten(); }
+        catch (cause) {
+          flattenFailed = true;
+          reportClientWarning("fill.flatten", cause, { fieldCount: fields.length });
+        }
       }
       const output = await document.save();
       const blob = new Blob([output as BlobPart], { type: "application/pdf" });
@@ -241,7 +296,12 @@ export function PdfFiller() {
       setStatus(flattenFailed
         ? "Downloaded successfully. Locking was not supported by this form, so its fields remain editable."
         : "Downloaded successfully. Your original file remains unchanged.");
-    } catch {
+    } catch (cause) {
+      reportClientError("fill.download", cause, {
+        fieldCount: fields.length,
+        overlayCount: overlays.length,
+        lockValues,
+      });
       setError("The filled PDF could not be saved. Keep this page open and try again with Lock values turned off.");
     } finally {
       setBusy(false);
@@ -280,7 +340,7 @@ export function PdfFiller() {
     <div className="editor-shell">
       <div className="editor-toolbar">
         <div className="file-summary"><span aria-hidden="true">PDF</span><div><strong>{fileName}</strong><small>{pageCount} page{pageCount === 1 ? "" : "s"} · On this device</small></div></div>
-        <button type="button" className="text-button" onClick={() => { pristineBytes.current = null; setPageCount(0); setFields([]); setOverlays([]); setStatus("Choose a PDF to start filling it privately."); }}>Choose another PDF</button>
+          <button type="button" className="text-button" onClick={chooseAnotherPdf}>Choose another PDF</button>
       </div>
       <div className="editor-layout">
         <div className="preview-pane">

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { reportClientError, reportClientWarning } from "../lib/client-errors";
 import { initialCompressionPlan, refineCompressionPlan } from "../lib/compression-plan";
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
@@ -21,6 +22,10 @@ type PdfJsPage = {
 type PdfJsDocument = {
   numPages: number;
   getPage(pageNumber: number): Promise<PdfJsPage>;
+};
+
+type PdfJsLoadingTask = {
+  promise: Promise<PdfJsDocument>;
   destroy(): Promise<void>;
 };
 
@@ -117,7 +122,8 @@ export function CompressPdf() {
       sourceBytes.current = bytes;
       setFile(selected);
       setProgress("PDF ready. Choose a target size and compress it.");
-    } catch {
+    } catch (caught) {
+      reportClientError("compress.read-file", caught, { fileSize: selected.size, mimeType: selected.type || "unknown" });
       setError("We could not read that file. Choose another PDF and try again.");
     }
   }
@@ -169,11 +175,13 @@ export function CompressPdf() {
     }
 
     let pdfDocument: PdfJsDocument | null = null;
+    let pdfLoadingTask: PdfJsLoadingTask | null = null;
     try {
       setProgress("Opening your PDF locally…");
       const [pdfLib, pdfJs] = await Promise.all([import("pdf-lib"), import("pdfjs-dist")]);
       pdfJs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-      pdfDocument = await pdfJs.getDocument({ data: sourceBytes.current.slice() }).promise as unknown as PdfJsDocument;
+      pdfLoadingTask = pdfJs.getDocument({ data: sourceBytes.current.slice() }) as unknown as PdfJsLoadingTask;
+      pdfDocument = await pdfLoadingTask.promise;
       if (pdfDocument.numPages > MAX_PAGES) throw new Error("TOO_MANY_PAGES");
 
       let { scale, quality } = initialCompressionPlan(file.size, targetBytes);
@@ -200,6 +208,11 @@ export function CompressPdf() {
         ? `Done in ${seconds}s. Your PDF is ${formatBytes(downloadable.byteLength)} and ready to download.`
         : `Finished in ${seconds}s. Best readable result: ${formatBytes(downloadable.byteLength)}; this document could not safely reach ${formatBytes(targetBytes)}.`);
     } catch (caught) {
+      reportClientError("compress.process", caught, {
+        fileSize: file.size,
+        targetBytes,
+        pageCount: pdfDocument?.numPages,
+      });
       const message = caught instanceof Error ? caught.message.toLowerCase() : "";
       if (message.includes("password")) setError("This PDF is password-protected. Unlock it in a trusted PDF app, then try again.");
       else if (caught instanceof Error && caught.message === "TOO_MANY_PAGES") setError(`This version supports up to ${MAX_PAGES} pages per PDF.`);
@@ -207,7 +220,11 @@ export function CompressPdf() {
       setProgress("Compression was not completed.");
     } finally {
       setIsCompressing(false);
-      if (pdfDocument) void pdfDocument.destroy().catch(() => undefined);
+      if (pdfLoadingTask) {
+        void pdfLoadingTask.destroy().catch((caught) => {
+          reportClientWarning("compress.cleanup", caught);
+        });
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { reportClientError } from "../lib/client-errors";
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
@@ -82,7 +83,8 @@ export function ProtectPdf() {
       setPassword("");
       setConfirmation("");
       setStatus("PDF ready. Set a password to protect it.");
-    } catch {
+    } catch (caught) {
+      reportClientError("protect.read-file", caught, { fileSize: selected.size, mimeType: selected.type || "unknown" });
       setError("We could not read that file. Choose another PDF and try again.");
       setStatus("Choose another PDF.");
     }
@@ -130,6 +132,7 @@ export function ProtectPdf() {
       window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
       setStatus("Protected PDF downloaded. Keep your password somewhere safe.");
     } catch (caught) {
+      reportClientError("protect.encrypt", caught, { fileSize: file.size, algorithm: "AES-256" });
       setError(errorMessage(caught));
       setStatus("Protection was not completed.");
     } finally {

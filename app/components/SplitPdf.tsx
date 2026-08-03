@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { reportClientError } from "../lib/client-errors";
 import { parsePageRanges } from "../lib/page-ranges";
 import { createPdfFromPageIndices } from "../lib/pdf-organize";
 
@@ -55,7 +56,10 @@ export function SplitPdf() {
       if (code === "TOO_LARGE") setError("This PDF is larger than 50 MB. Choose a smaller document.");
       else if (code === "NOT_PDF") setError("This file does not appear to be a valid PDF.");
       else if (code === "ENCRYPTED") setError("This PDF is password-protected. Unlock it first, then try again.");
-      else setError("We could not open this PDF. It may be damaged or unsupported.");
+      else {
+        reportClientError("split.open", caught, { fileSize: selected.size, mimeType: selected.type || "unknown" });
+        setError("We could not open this PDF. It may be damaged or unsupported.");
+      }
     } finally { setBusy(false); }
   }
 
@@ -77,7 +81,11 @@ export function SplitPdf() {
       link.download = `${file.name.replace(/\.pdf$/i, "") || "document"}-${mode === "extract" ? "selected-pages" : "pages-removed"}.pdf`;
       document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
       setStatus(`Downloaded a ${indices.length}-page PDF.`);
-    } catch { setError("We could not create the split PDF. Please try another page selection."); setStatus("Split was not completed."); }
+    } catch (caught) {
+      reportClientError("split.process", caught, { mode, pageCount, selectedPageCount: selectedPages.length });
+      setError("We could not create the split PDF. Please try another page selection.");
+      setStatus("Split was not completed.");
+    }
     finally { setBusy(false); }
   }
 

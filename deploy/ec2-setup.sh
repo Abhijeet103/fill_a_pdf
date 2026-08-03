@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-echo "ec2-setup.sh has been replaced by the complete HTTPS deployment script."
-echo "Use: sudo bash deploy/ec2-deploy.sh YOUR_EMAIL_ADDRESS"
-exec "$(dirname "$0")/ec2-deploy.sh" "$@"
+echo "This file is only a compatibility wrapper."
+echo "The server must already have Git, Node.js, Nginx, TLS, and the localpdf user configured."
+echo "Running the application deployment now..."
+exec "$(dirname "$0")/ec2-deploy.sh"
